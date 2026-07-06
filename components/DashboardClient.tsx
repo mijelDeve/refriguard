@@ -9,7 +9,7 @@ import { AlertHistory } from "./AlertHistory";
 import { MaintenanceButton } from "./MaintenanceButton";
 import { RangeManager } from "./RangeManager";
 import { DeviceFilter } from "./DeviceFilter";
-import type { LecturaRefrigerador, RangoAlimento } from "@/lib/types";
+import type { LecturaRefrigerador, RangoAlimento, Dispositivo } from "@/lib/types";
 import { Snowflake } from "lucide-react";
 
 interface Alerta {
@@ -33,7 +33,7 @@ export function DashboardClient() {
   const [lecturas, setLecturas] = useState<LecturaRefrigerador[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [rangoActivo, setRangoActivo] = useState<RangoAlimento | null>(null);
-  const [dispositivos, setDispositivos] = useState<string[]>([]);
+  const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
   const [dispositivoFiltro, setDispositivoFiltro] = useState("all");
 
   const fetchAll = useCallback(async () => {

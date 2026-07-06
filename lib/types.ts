@@ -1,3 +1,11 @@
+export interface Dispositivo {
+  id: number;
+  nombre: string;
+  ubicacion: string | null;
+  tipo: string | null;
+  created_at: string;
+}
+
 export type EstadoLectura = "normal" | "pre-alerta" | "alerta" | "mantenimiento";
 
 export interface LecturaRefrigerador {

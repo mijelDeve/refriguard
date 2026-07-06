@@ -1,9 +1,10 @@
 "use client";
 
 import { Monitor } from "lucide-react";
+import type { Dispositivo } from "@/lib/types";
 
 interface DeviceFilterProps {
-  dispositivos: string[];
+  dispositivos: Dispositivo[];
   selected: string;
   onChange: (value: string) => void;
 }
@@ -21,8 +22,8 @@ export function DeviceFilter({ dispositivos, selected, onChange }: DeviceFilterP
       >
         <option value="all">Todos los dispositivos</option>
         {dispositivos.map((d) => (
-          <option key={d} value={d}>
-            {d}
+          <option key={d.nombre} value={d.nombre}>
+            {d.nombre}{d.ubicacion ? ` — ${d.ubicacion}` : ""}
           </option>
         ))}
       </select>
