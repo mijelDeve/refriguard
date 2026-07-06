@@ -37,3 +37,6 @@
 - `.env*` en .gitignore — nunca committear credenciales
 - MCP Supabase config en `C:\Users\mijel\.config\opencode\opencode.json` (tipo remote)
 - README.md actualizado con documentación del proyecto
+
+## Skills
+- `frontend-design` — disponible en `.opencode/skills/frontend-design/SKILL.md`

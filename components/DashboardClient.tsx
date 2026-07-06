@@ -7,6 +7,7 @@ import { TemperatureChart } from "./TemperatureChart";
 import { RecentReadings } from "./RecentReadings";
 import { AlertHistory } from "./AlertHistory";
 import { MaintenanceButton } from "./MaintenanceButton";
+import { RangeManager } from "./RangeManager";
 import type { LecturaRefrigerador } from "@/lib/types";
 import { Snowflake } from "lucide-react";
 
@@ -53,7 +54,7 @@ export function DashboardClient() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
+    const id = setTimeout(() => fetchAll(), 0);
 
     const channel = supabase
       .channel("lecturas_realtime")
@@ -84,6 +85,7 @@ export function DashboardClient() {
       .subscribe();
 
     return () => {
+      clearTimeout(id);
       supabase.removeChannel(channel);
     };
   }, [fetchAll]);
@@ -101,13 +103,16 @@ export function DashboardClient() {
           </div>
         </div>
 
-        {ultima && (
-          <MaintenanceButton
-            lecturaId={ultima.id}
-            estado={ultima.estado}
-            onSuccess={fetchAll}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          <RangeManager />
+          {ultima && (
+            <MaintenanceButton
+              lecturaId={ultima.id}
+              estado={ultima.estado}
+              onSuccess={fetchAll}
+            />
+          )}
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
