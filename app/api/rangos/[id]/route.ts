@@ -16,9 +16,38 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { nombre, temp_min, temp_max, humedad_min, humedad_max } = body;
+    const { nombre, temp_min, temp_max, humedad_min, humedad_max, activo } = body;
 
-    const updates: Record<string, string | number> = {};
+    // Handle activo specially (needs to deactivate others first)
+    if (activo === true) {
+      const { error: deactivateError } = await supabase
+        .from("rangos_alimentos")
+        .update({ activo: false } as never)
+        .neq("id", idNum);
+
+      if (deactivateError) {
+        return NextResponse.json({ error: deactivateError.message }, { status: 500 });
+      }
+
+      const { data: activated, error: activateError } = await supabase
+        .from("rangos_alimentos")
+        .update({ activo: true } as never)
+        .eq("id", idNum)
+        .select()
+        .single<RangoAlimento>();
+
+      if (activateError) {
+        return NextResponse.json({ error: activateError.message }, { status: 500 });
+      }
+
+      if (!activated) {
+        return NextResponse.json({ error: "Rango no encontrado" }, { status: 404 });
+      }
+
+      return NextResponse.json(activated);
+    }
+
+    const updates: Record<string, string | number | boolean> = {};
     if (nombre !== undefined) {
       if (typeof nombre !== "string" || !nombre.trim()) {
         return NextResponse.json({ error: "nombre inválido" }, { status: 400 });
@@ -48,6 +77,9 @@ export async function PATCH(
         return NextResponse.json({ error: "humedad_max inválido" }, { status: 400 });
       }
       updates.humedad_max = humedad_max;
+    }
+    if (activo === false) {
+      updates.activo = false;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -115,6 +147,20 @@ export async function DELETE(
 
     if (isNaN(idNum)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    // Check if it's the active range
+    const { data: existing } = await supabase
+      .from("rangos_alimentos")
+      .select("activo")
+      .eq("id", idNum)
+      .single<{ activo: boolean }>();
+
+    if (existing?.activo) {
+      return NextResponse.json(
+        { error: "No se puede eliminar el rango activo. Seleccioná otro rango como activo primero." },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabase

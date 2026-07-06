@@ -8,7 +8,7 @@ import { RecentReadings } from "./RecentReadings";
 import { AlertHistory } from "./AlertHistory";
 import { MaintenanceButton } from "./MaintenanceButton";
 import { RangeManager } from "./RangeManager";
-import type { LecturaRefrigerador } from "@/lib/types";
+import type { LecturaRefrigerador, RangoAlimento } from "@/lib/types";
 import { Snowflake } from "lucide-react";
 
 interface Alerta {
@@ -31,12 +31,14 @@ export function DashboardClient() {
   const [ultima, setUltima] = useState<LecturaRefrigerador | null>(null);
   const [lecturas, setLecturas] = useState<LecturaRefrigerador[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [rangoActivo, setRangoActivo] = useState<RangoAlimento | null>(null);
 
   const fetchAll = useCallback(async () => {
-    const [ultimaRes, lecturasRes, alertasRes] = await Promise.all([
+    const [ultimaRes, lecturasRes, alertasRes, rangoRes] = await Promise.all([
       fetch("/api/lecturas/ultima"),
       fetch("/api/lecturas?limit=50"),
       fetch("/api/historial-alertas"),
+      fetch("/api/rangos/activo"),
     ]);
 
     if (ultimaRes.ok) {
@@ -50,6 +52,11 @@ export function DashboardClient() {
     if (alertasRes.ok) {
       const data = await alertasRes.json();
       if (Array.isArray(data)) setAlertas(data);
+    }
+    if (rangoRes.ok) {
+      const data = await rangoRes.json();
+      if (data && !data.error) setRangoActivo(data);
+      else setRangoActivo(null);
     }
   }, []);
 
@@ -104,6 +111,12 @@ export function DashboardClient() {
         </div>
 
         <div className="flex items-center gap-2">
+          {rangoActivo && (
+            <div className="hidden items-center gap-2 rounded-lg border border-green-800/40 bg-green-950/20 px-3 py-2 sm:flex">
+              <span className="size-2 rounded-full bg-green-400" />
+              <span className="text-xs font-medium text-green-400">{rangoActivo.nombre}</span>
+            </div>
+          )}
           <RangeManager />
           {ultima && (
             <MaintenanceButton

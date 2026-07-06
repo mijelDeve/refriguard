@@ -116,6 +116,23 @@ export function RangeManager() {
     }
   };
 
+  const handleActivar = async (id: number) => {
+    try {
+      const res = await fetch(`/api/rangos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: true }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al activar rango");
+      }
+      await fetchRangos();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error de red");
+    }
+  };
+
   const handleAdd = async () => {
     const form = newForm;
     if (!form.nombre.trim()) return;
@@ -208,6 +225,7 @@ export function RangeManager() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-left text-zinc-500">
+                    <th className="pb-2 pr-3 font-medium">Activo</th>
                     <th className="pb-2 pr-4 font-medium">Alimento</th>
                     <th className="pb-2 pr-4 font-medium">Temperatura</th>
                     <th className="pb-2 pr-4 font-medium">Humedad</th>
@@ -218,7 +236,22 @@ export function RangeManager() {
                   {rangos.map((r) => {
                     const editing = editingId === r.id;
                     return (
-                      <tr key={r.id} className="group">
+                      <tr key={r.id} className={r.activo ? "border-l-2 border-green-500 bg-green-950/10" : "group"}>
+                        <td className="w-20 py-2.5 pr-3">
+                          {r.activo ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-400">
+                              <span className="size-1.5 rounded-full bg-green-400" />
+                              Activo
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleActivar(r.id)}
+                              className="rounded-md px-2 py-0.5 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-blue-400"
+                            >
+                              Activar
+                            </button>
+                          )}
+                        </td>
                         {editing ? (
                           <>
                             <td className="py-2.5 pr-4">

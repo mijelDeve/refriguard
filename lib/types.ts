@@ -17,5 +17,6 @@ export interface RangoAlimento {
   temp_max: number;
   humedad_min: number;
   humedad_max: number;
+  activo: boolean;
   created_at: string;
 }
