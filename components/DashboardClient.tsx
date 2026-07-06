@@ -8,6 +8,7 @@ import { RecentReadings } from "./RecentReadings";
 import { AlertHistory } from "./AlertHistory";
 import { MaintenanceButton } from "./MaintenanceButton";
 import { RangeManager } from "./RangeManager";
+import { DeviceFilter } from "./DeviceFilter";
 import type { LecturaRefrigerador, RangoAlimento } from "@/lib/types";
 import { Snowflake } from "lucide-react";
 
@@ -32,13 +33,16 @@ export function DashboardClient() {
   const [lecturas, setLecturas] = useState<LecturaRefrigerador[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [rangoActivo, setRangoActivo] = useState<RangoAlimento | null>(null);
+  const [dispositivos, setDispositivos] = useState<string[]>([]);
+  const [dispositivoFiltro, setDispositivoFiltro] = useState("all");
 
   const fetchAll = useCallback(async () => {
-    const [ultimaRes, lecturasRes, alertasRes, rangoRes] = await Promise.all([
+    const [ultimaRes, lecturasRes, alertasRes, rangoRes, dispRes] = await Promise.all([
       fetch("/api/lecturas/ultima"),
       fetch("/api/lecturas?limit=50"),
       fetch("/api/historial-alertas"),
       fetch("/api/rangos/activo"),
+      fetch("/api/dispositivos"),
     ]);
 
     if (ultimaRes.ok) {
@@ -57,6 +61,10 @@ export function DashboardClient() {
       const data = await rangoRes.json();
       if (data && !data.error) setRangoActivo(data);
       else setRangoActivo(null);
+    }
+    if (dispRes.ok) {
+      const data = await dispRes.json();
+      if (Array.isArray(data)) setDispositivos(data);
     }
   }, []);
 
@@ -97,9 +105,21 @@ export function DashboardClient() {
     };
   }, [fetchAll]);
 
+  const lecturasFiltradas = dispositivoFiltro === "all"
+    ? lecturas
+    : lecturas.filter((l) => l.dispositivo_id === dispositivoFiltro);
+
+  const ultimaFiltrada = dispositivoFiltro === "all"
+    ? ultima
+    : lecturasFiltradas[0] ?? null;
+
+  const alertasFiltradas = dispositivoFiltro === "all"
+    ? alertas
+    : alertas.filter((a) => a.dispositivo_id === dispositivoFiltro);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-blue-600">
             <Snowflake className="size-5 text-white" />
@@ -111,6 +131,11 @@ export function DashboardClient() {
         </div>
 
         <div className="flex items-center gap-2">
+          <DeviceFilter
+            dispositivos={dispositivos}
+            selected={dispositivoFiltro}
+            onChange={setDispositivoFiltro}
+          />
           {rangoActivo && (
             <div className="hidden items-center gap-2 rounded-lg border border-green-800/40 bg-green-950/20 px-3 py-2 sm:flex">
               <span className="size-2 rounded-full bg-green-400" />
@@ -130,16 +155,16 @@ export function DashboardClient() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <TemperatureCard lectura={ultima} />
+          <TemperatureCard lectura={ultimaFiltrada} />
         </div>
         <div className="lg:col-span-2">
-          <TemperatureChart lecturas={lecturas} />
+          <TemperatureChart lecturas={lecturasFiltradas} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RecentReadings lecturas={lecturas} />
-        <AlertHistory alertas={alertas} />
+        <RecentReadings lecturas={lecturasFiltradas} />
+        <AlertHistory alertas={alertasFiltradas} />
       </div>
     </div>
   );
